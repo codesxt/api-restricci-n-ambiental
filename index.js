@@ -10,8 +10,17 @@ var _lastUpdate = null;
 var buildRestriction = function(restr, lastUpdate){
   var restriction = "";
   switch(restr) {
+    case "Bueno":
+      restriction = "bueno";
+      break;
     case "Regular":
       restriction = "regular";
+      break;
+    case "Alerta":
+      restriction = "alerta";
+      break;
+    case "Preemergencia":
+      restriction = "preemergencia";
       break;
     default:
       restriction = "normal";

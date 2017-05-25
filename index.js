@@ -4,36 +4,38 @@ var request = require('request');
 var cheerio = require('cheerio');
 var app     = express();
 
-var _restriction = null;
+var _condition = null;
+var _conditionDate = null;
 var _lastUpdate = null;
 
-var buildRestriction = function(restr, lastUpdate){
-  var restriction = "";
-  switch(restr) {
+var buildCondition = function(cond, conditionDate, lastUpdate){
+  var condition = "";
+  switch(cond) {
     case "Bueno":
-      restriction = "bueno";
+      condition = "bueno";
       break;
     case "Regular":
-      restriction = "regular";
+      condition = "regular";
       break;
     case "Alerta":
-      restriction = "alerta";
+      condition = "alerta";
       break;
     case "Preemergencia":
-      restriction = "preemergencia";
+      condition = "preemergencia";
       break;
     default:
-      restriction = "normal";
+      condition = "normal";
   }
 
   var json = {
-    restriction: restriction,
+    condition: condition,
+    conditionDate: conditionDate,
     lastUpdate: lastUpdate
   };
   return json;
 }
 
-var updateRestriction = function(){
+var updateCondition = function(){
   // The URL we will scrape from - in our example Anchorman 2.
   url = 'http://alertas.mma.gob.cl/talca-y-maule/';
   // The structure of our request call
@@ -44,27 +46,41 @@ var updateRestriction = function(){
       if(!error){
           // Next, we'll utilize the cheerio library on the returned html which will essentially give us jQuery functionality
           var $ = cheerio.load(html);
-          var restriccion = "";
+          var condition = "";
+          var conditionDate = "";
+
+          $('.pronstico_ext').each(function(i, elem) {
+            var data = $(this).text();
+            console.log(i+":"+data);
+          });
+
+
           $('.pronstico_ext').filter(function(){
             var data = $(this);
-            restriccion = data.children().first().children().first().children().first().text();
-            restriccion = restriccion.substring(2);
+            condition = data.children().first().children().first().children().first().text();
+            condition = condition.substring(2);
+
+            conditionDate = data.children().first().children().first().text();
+            conditionDate = conditionDate.replace("Pronóstico para el día  ", "");
+            conditionDate = conditionDate.split(" : ")[0];
           })
-          _restriction = restriccion;
+
+          _condition = condition;
+          _conditionDate = conditionDate;
           _lastUpdate = new Date();
       }
   })
 }
 
-updateRestriction();
+updateCondition();
 
 setInterval(function(){
-  updateRestriction();
-  console.log("Updating data at: " + _lastUpdate + " with value: "+_restriction);
+  updateCondition();
+  console.log("Updating data at: " + _lastUpdate + " with value: "+_condition);
 }, 1000*60*60);
 
-app.get('/restriction', function(req, res){
-  res.send(buildRestriction(_restriction, _lastUpdate));
+app.get('/condition', function(req, res){
+  res.send(buildCondition(_condition, _conditionDate, _lastUpdate));
 })
 
 app.listen(process.env.PORT || '3000')

@@ -4,36 +4,8 @@ var request = require('request');
 var cheerio = require('cheerio');
 var app     = express();
 
-var _condition = null;
-var _conditionDate = null;
+var _conditions = [];
 var _lastUpdate = null;
-
-var buildCondition = function(cond, conditionDate, lastUpdate){
-  var condition = "";
-  switch(cond) {
-    case "Bueno":
-      condition = "bueno";
-      break;
-    case "Regular":
-      condition = "regular";
-      break;
-    case "Alerta":
-      condition = "alerta";
-      break;
-    case "Preemergencia":
-      condition = "preemergencia";
-      break;
-    default:
-      condition = "normal";
-  }
-
-  var json = {
-    condition: condition,
-    conditionDate: conditionDate,
-    lastUpdate: lastUpdate
-  };
-  return json;
-}
 
 var updateCondition = function(){
   // The URL we will scrape from - in our example Anchorman 2.
@@ -49,13 +21,8 @@ var updateCondition = function(){
           var condition = "";
           var conditionDate = "";
 
+          _conditions = [];
           $('.pronstico_ext').each(function(i, elem) {
-            var data = $(this).text();
-            console.log(i+":"+data);
-          });
-
-
-          $('.pronstico_ext').filter(function(){
             var data = $(this);
             condition = data.children().first().children().first().children().first().text();
             condition = condition.substring(2);
@@ -63,11 +30,15 @@ var updateCondition = function(){
             conditionDate = data.children().first().children().first().text();
             conditionDate = conditionDate.replace("Pronóstico para el día  ", "");
             conditionDate = conditionDate.split(" : ")[0];
-          })
 
-          _condition = condition;
-          _conditionDate = conditionDate;
-          _lastUpdate = new Date();
+            _lastUpdate = new Date();
+
+            _conditions.push({
+              condition: condition.toLowerCase(),
+              conditionDate: conditionDate,
+              lastUpdate: _lastUpdate
+            });
+          });
       }
   })
 }
@@ -76,11 +47,11 @@ updateCondition();
 
 setInterval(function(){
   updateCondition();
-  console.log("Updating data at: " + _lastUpdate + " with value: "+_condition);
+  console.log("Updating data at: " + _lastUpdate);
 }, 1000*60*60);
 
 app.get('/condition', function(req, res){
-  res.send(buildCondition(_condition, _conditionDate, _lastUpdate));
+  res.send(_conditions);
 })
 
 app.listen(process.env.PORT || '3000')

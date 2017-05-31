@@ -3,6 +3,7 @@ var fs = require('fs');
 var request = require('request');
 var cheerio = require('cheerio');
 var app     = express();
+var http    = require("http");
 
 var _conditions = [];
 var _lastUpdate = null;
@@ -50,6 +51,10 @@ setInterval(function(){
   console.log("Updating data at: " + _lastUpdate);
 }, 1000*60*60);
 
+app.get('/', function(req, res){
+  res.send("Application is alive!");
+})
+
 app.get('/condition', function(req, res){
   res.send(_conditions);
 })
@@ -57,3 +62,8 @@ app.get('/condition', function(req, res){
 app.listen(process.env.PORT || '3000')
 console.log('Server started on port '+ (process.env.PORT || '3000'));
 exports = module.exports = app;
+
+// Keeps application alive
+setInterval(function() {
+  http.get("http://restriccion-talca.herokuapp.com");
+}, 1000*60*5);

@@ -1,5 +1,5 @@
 {
-  "name": "restriccion",
+  "name": "api-restriccion-ambiental",
   "version": "1.0.0",
   "description": "Un programa para monitorear las restricciones ambientales en Talca",
   "main": "index.js",

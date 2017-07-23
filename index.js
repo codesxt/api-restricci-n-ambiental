@@ -10,6 +10,31 @@ var UPDATE_INTERVAL = 1000*60*60;
 var _conditions = [];
 var _lastUpdate = null;
 
+var getHealthWarnings = (condition) => {
+  switch(condition){
+    case 'alerta':
+      return "Empeoramiento de salud de personas con enfermedades respiratorias y cardiovasculares. Aumento de síntomas respiratorios en población general. Niños y tercera edad deberían evitar ejercicio prolongado. Población general debería limitar ejercicio prolongado.";
+      break;
+    default:
+      return "No hay recomendaciones de salud";
+  }
+  return
+}
+
+var getRestrictions = (condition) => {
+  switch(condition){
+    case 'alerta':
+      return [
+        { message:"No se permitirán humos visibles provenientes de viviendas entre las 18:00 horas y 23:59 horas (en polígono único)." },
+        { message:"Se suspenderán actividades físicas y deportivas al aire libre y al interior de gimnasios, después de las 19:00 horas." }
+      ]
+      break;
+    default:
+      return "No hay recomendaciones de salud";
+  }
+  return
+}
+
 var updateCondition = function(){
   url = 'http://alertas.mma.gob.cl/comunas/talca';
   request(url, function(error, response, html){
@@ -32,19 +57,22 @@ var updateCondition = function(){
               // Extract Condition
               condition = data.find($('h3')).text().trim();
               condition = condition.split(' ')[0];
+              condition = condition.toLowerCase()
             }
             if(rowsRead%3==2 && rowsRead != 6){
               // Create and append object
               _lastUpdate = new Date();
               _conditions.push({
-                condition: condition.toLowerCase(),
+                condition: condition,
                 conditionDate: conditionDate,
-                lastUpdate: _lastUpdate
+                lastUpdate: _lastUpdate,
+                healthWarnings: getHealthWarnings(condition),
+                restrictions: getRestrictions(condition)
               });
             }
             rowsRead += 1;
           });
-          console.log(_conditions);
+          console.log(JSON.stringify(_conditions, null, 4));
 
           /*
           $('.pronstico_ext').each(function(i, elem) {
@@ -87,8 +115,8 @@ app.get('/condition', function(req, res){
   res.send(_conditions);
 })
 
-app.listen(process.env.PORT || '3000')
-console.log('Server started on port '+ (process.env.PORT || '3000'));
+app.listen(process.env.PORT || '3007')
+console.log('Server started on port '+ (process.env.PORT || '3007'));
 exports = module.exports = app;
 
 // Keeps application alive

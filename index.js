@@ -120,6 +120,7 @@ console.log('Server started on port '+ (process.env.PORT || '3007'));
 exports = module.exports = app;
 
 // Keeps application alive
+/*
 setInterval(function() {
   http.get("http://restriccion-talca.herokuapp.com");
-}, 1000*60*5);
+}, 1000*60*5);*/

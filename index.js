@@ -7,6 +7,10 @@ var http    = require("http");
 
 var UPDATE_INTERVAL = 1000*60*60;
 
+
+// Regular  : PM10 150 a 194 ug/m3
+// Bueno    : PM10 de 0 a 149 ug/m3
+
 var _conditions = [];
 var _lastUpdate = null;
 
@@ -14,6 +18,12 @@ var getHealthWarnings = (condition) => {
   switch(condition){
     case 'alerta':
       return "Empeoramiento de salud de personas con enfermedades respiratorias y cardiovasculares. Aumento de síntomas respiratorios en población general. Niños y tercera edad deberían evitar ejercicio prolongado. Población general debería limitar ejercicio prolongado.";
+      break;
+    case 'regular':
+      return "Niños y tercera edad deberían evitar ejercicio prolongado. Población general debería limitar ejercicio prolongado.";
+      break;
+    case 'bueno':
+      return "No hay advertencias.";
       break;
     default:
       return "No hay recomendaciones de salud";
@@ -29,8 +39,20 @@ var getRestrictions = (condition) => {
         { message:"Se suspenderán actividades físicas y deportivas al aire libre y al interior de gimnasios, después de las 19:00 horas." }
       ]
       break;
+    case 'bueno':
+      return [
+        { message:"No se consideran medidas."}
+      ]
+      break;
+    case 'regular':
+      return [
+        { message:"No se consideran medidas."}
+      ]
+      break;
     default:
-      return "No hay recomendaciones de salud";
+      return [
+        { message:"No hay recomendaciones de salud."}
+      ];
   }
   return
 }
@@ -113,6 +135,14 @@ app.get('/', function(req, res){
 
 app.get('/condition', function(req, res){
   res.send(_conditions);
+})
+
+app.get('/health-warning/:condition', (req, res) => {
+  res.send(getHealthWarnings(req.params.condition));
+})
+
+app.get('/restrictions/:condition', (req, res) => {
+  res.send(getRestrictions(req.params.condition));
 })
 
 app.listen(process.env.PORT || '3007')
